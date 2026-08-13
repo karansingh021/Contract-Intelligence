@@ -1,0 +1,120 @@
+# ================================================================================================
+# Databricks Asset Bundle — Contract Intelligence & Revenue Leakage Prevention
+# Deploy with:  databricks bundle deploy -t dev
+# Run once manually with: databricks bundle run contract_intelligence_pipeline -t dev
+#
+# This replaces the Snowflake TASKs (ALERT_TASK, LEAKAGE_PIPELINE_TASK) with a single
+# Databricks Workflow made of modular tasks -- each task is one notebook, so any module
+# can be re-run, retried, or scheduled independently while staying part of one DAG.
+# ================================================================================================
+bundle:
+  name: contract_intelligence
+
+variables:
+  catalog:
+    default: contract_intelligence
+  volume_path:
+    default: /Volumes/contract_intelligence/raw/landing
+  llm_endpoint:
+    default: databricks-meta-llama-3-3-70b-instruct
+  alert_recipient:
+    default: ""
+
+targets:
+  dev:
+    default: true
+    workspace:
+      host: https://<your-workspace-host>
+
+resources:
+  jobs:
+    contract_intelligence_pipeline:
+      name: "Contract Intelligence - Full Pipeline"
+      # Same cadence as the original 15-minute Snowflake LEAKAGE_PIPELINE_TASK.
+      # Split into two schedules below if you want ingestion/AI extraction to run less often
+      # than the rule engine (AI extraction is the expensive step; rule engine is cheap SQL).
+      schedule:
+        quartz_cron_expression: "0 0/15 * * * ?"
+        timezone_id: "UTC"
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+        - name: volume_path
+          default: ${var.volume_path}
+        - name: llm_endpoint
+          default: ${var.llm_endpoint}
+        - name: alert_recipient
+          default: ${var.alert_recipient}
+
+      tasks:
+        - task_key: setup
+          notebook_task:
+            notebook_path: ../00_setup/00_config.py
+          new_cluster: &default_cluster
+            spark_version: "15.4.x-scala2.12"
+            node_type_id: "i3.xlarge"
+            num_workers: 2
+            data_security_mode: "SINGLE_USER"
+
+        - task_key: ddl_raw_tables
+          depends_on: [{task_key: setup}]
+          notebook_task:
+            notebook_path: ../01_ingestion/01_ddl_raw_tables.py
+          new_cluster: *default_cluster
+
+        - task_key: billing_customer_ops_ingestion
+          depends_on: [{task_key: ddl_raw_tables}]
+          notebook_task:
+            notebook_path: ../01_ingestion/02_billing_customer_ops_ingestion.py
+          new_cluster: *default_cluster
+
+        - task_key: pdf_ocr_and_chunking
+          depends_on: [{task_key: ddl_raw_tables}]
+          notebook_task:
+            notebook_path: ../02_ai_extraction/01_pdf_ocr_and_chunking.py
+          new_cluster: *default_cluster
+
+        - task_key: llm_extraction_and_quality_pass
+          depends_on: [{task_key: pdf_ocr_and_chunking}]
+          notebook_task:
+            notebook_path: ../02_ai_extraction/02_llm_extraction_and_quality_pass.py
+          new_cluster: *default_cluster
+
+        - task_key: build_master_and_contracts
+          depends_on: [{task_key: llm_extraction_and_quality_pass}]
+          notebook_task:
+            notebook_path: ../02_ai_extraction/03_build_master_and_contracts.py
+          new_cluster: *default_cluster
+
+        - task_key: ddl_analytics_tables
+          depends_on: [{task_key: setup}]
+          notebook_task:
+            notebook_path: ../03_rule_engine/00_ddl_analytics_tables.py
+          new_cluster: *default_cluster
+
+        - task_key: rule_views
+          depends_on:
+            - task_key: build_master_and_contracts
+            - task_key: billing_customer_ops_ingestion
+            - task_key: ddl_analytics_tables
+          notebook_task:
+            notebook_path: ../03_rule_engine/01_rule_views.py
+          new_cluster: *default_cluster
+
+        - task_key: generate_leakage
+          depends_on: [{task_key: rule_views}]
+          notebook_task:
+            notebook_path: ../03_rule_engine/02_generate_leakage.py
+          new_cluster: *default_cluster
+
+        - task_key: gold_views
+          depends_on: [{task_key: rule_views}]
+          notebook_task:
+            notebook_path: ../04_gold_views/01_gold_views.py
+          new_cluster: *default_cluster
+
+        - task_key: send_alerts
+          depends_on: [{task_key: generate_leakage}]
+          notebook_task:
+            notebook_path: ../05_alerting/01_send_alerts.py
+          new_cluster: *default_cluster
