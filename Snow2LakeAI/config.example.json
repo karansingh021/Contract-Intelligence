@@ -1,0 +1,21 @@
+{
+  "snowflake": {
+    "account": "<account_identifier>",
+    "user": "<user>",
+    "password": "<password>",
+    "authenticator": "snowflake",
+    "warehouse": "<warehouse>",
+    "database": "<database>",
+    "schema": "<schema>",
+    "role": "<role>"
+  },
+  "stage": "@APP_PACKAGE_STAGE",
+  "stage_prefix": "",
+  "databricks": {
+    "server_hostname": "<workspace-hostname>",
+    "http_path": "<sql-warehouse-http-path>",
+    "access_token": "<token>",
+    "model": "databricks-gpt-oss-20b"
+  },
+  "output_dir": "./snow2lake_output"
+}

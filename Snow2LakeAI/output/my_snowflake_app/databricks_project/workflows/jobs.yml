@@ -1,0 +1,4 @@
+resources:
+  jobs: {}
+
+# Add migrated Snowflake TASK -> Databricks Workflow definitions here.

@@ -1,0 +1,9 @@
+bundle:
+  name: snow2lake_output_demo
+
+include:
+  - workflows/*.yml
+
+targets:
+  dev:
+    mode: development
