@@ -1,0 +1,22 @@
+{
+  "snowflake": {
+    "account": "your-account.snowflakecomputing.com",
+    "user": "YOUR_USERNAME",
+    "password": "YOUR_PASSWORD",
+    "warehouse": "COMPUTE_WH",
+    "database": "APP_DATABASE",
+    "schema": "PUBLIC",
+    "role": "ACCOUNTADMIN"
+  },
+  "databricks": {
+    "host": "https://your-workspace.cloud.databricks.com",
+    "token": "${DATABRICKS_TOKEN}",
+    "catalog": "main",
+    "schema": "apps"
+  },
+  "migration": {
+    "preserve_structure": true,
+    "convert_snowpark": true,
+    "generate_tests": true
+  }
+}

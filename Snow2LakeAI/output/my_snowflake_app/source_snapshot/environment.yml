@@ -1,9 +1,0 @@
-name: contract_intel_env
-channels:
-  - snowflake
-dependencies:
-  - streamlit=1.35.0
-  - snowflake-snowpark-python
-  - snowflake-native-apps-permission
-  - plotly
-  - pandas

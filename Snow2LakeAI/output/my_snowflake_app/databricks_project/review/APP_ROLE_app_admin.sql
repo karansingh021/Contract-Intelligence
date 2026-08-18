@@ -1,3 +1,0 @@
--- Snowflake APPLICATION ROLE 'app_admin' -> Databricks Group / Entitlement
--- In Databricks Apps, use workspace groups or service principals.
--- Original: RAW_SQL CREATE APPLICATION ROLE IF NOT EXISTS app_admin

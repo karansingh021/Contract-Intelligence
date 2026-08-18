@@ -1,0 +1,25 @@
+# Snowflake Native App Manifest
+manifest_version: 1
+
+version:
+  name: 1.0.0
+  label: Sales Analytics Dashboard
+  comment: Example Snowflake Native App for migration demonstration
+
+artifacts:
+  - src: streamlit_app.py
+    dest: /
+  - src: setup.sql
+    dest: /
+
+privileges:
+  - USAGE on SCHEMA:
+      - app_schema
+  - SELECT on ALL TABLES IN SCHEMA:
+      - app_schema
+  - EXECUTE on ALL FUNCTIONS IN SCHEMA:
+      - app_schema
+
+configuration:
+  log_level: INFO
+  enable_telemetry: true

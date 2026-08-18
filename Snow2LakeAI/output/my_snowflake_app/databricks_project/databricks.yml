@@ -1,9 +1,0 @@
-bundle:
-  name: my_snowflake_app
-
-include:
-  - workflows/*.yml
-
-targets:
-  dev:
-    mode: development

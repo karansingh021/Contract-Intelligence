@@ -1,9 +1,0 @@
-# Streamlit app (07_app/) — run: pip install -r requirements.txt && streamlit run app.py
-streamlit>=1.38
-databricks-sql-connector>=3.4
-pandas>=2.0
-
-# Pipeline notebooks (02_ai_extraction/) additionally need, installed via %pip in-notebook:
-pdfplumber>=0.11
-pytesseract>=0.3.10
-pdf2image>=1.17
